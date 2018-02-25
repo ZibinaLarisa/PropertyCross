@@ -5,7 +5,8 @@
                 <div class="navbar-header">
                     <a class="navbar-brand" href="#">PropertyCross</a>
                 </div>
-                <button class="btn btn-info navbar-btn navbar-right">Favourites</button>
+                <button class="btn btn-info navbar-btn navbar-right"
+                @click="gotoFavourites()">Favourites</button>
             </div>
         </nav>
         <div>
@@ -17,9 +18,11 @@
             <form>
                 <div class="input-group">
                     <input type="text" class="form-control" 
-                      placeholder="Search"  
+                      placeholder="Search" 
                       v-model="query" 
-                      @keyup.enter="search(query)">  
+                      @click="search(query)"
+                      >  
+                     <!--  @input="search(query)" -->
                     <div class="input-group-btn">
                         <button class="btn btn-default" type="submit">
                             <i class="glyphicon glyphicon-search"></i>
@@ -32,20 +35,15 @@
                   Go
             </button>
             <button type="button" class="btn btn-info"
-	            @click="gotoResults()">            
+	            @click="getLocation()">            
 	              My location
             </button>
         </div>
 
-        <template v-if="errorMsg">
-            <ul class="list-group">  
-                <li class="list-group-item list-group-item-warning">{{ errorMsg }}</li>
-            </ul>              
-        </template>
-
-        <template v-if="(lsLength)">
+        <!-- Heading above recent searches list -->
+        <template v-if="(lsLength)&&(!errorMsg)&&(!locations.length)">
             <ul class="list-group">
-				<li class="list-group-item list-group-item-info">Resent searches</li>
+                        <li class="list-group-item list-group-item-info">Resent searches</li>
                 <li class="list-group-item" 
                     v-for="(item, index) in getLastSearches"
                     @click="search(item)">
@@ -53,11 +51,27 @@
                 </li>
             </ul> 
         </template>
+
+        <!-- Heading above suggested locations list  -->
+        <template v-if="locations.length!==0">
+            <ul class="list-group">
+                <li class="list-group-item list-group-item-info">Please select a location below</li>
+                <li class="list-group-item"  
+                  v-for="(item, index) in locations"                  
+                  @click="search(item.place_name)"
+                  >                  
+                <div>{{ item.title }}</div>                  
+                </li>
+            </ul> 
+        </template>
+        <template v-if="errorMsg">
+            <ul class="list-group">  
+                <li class="list-group-item list-group-item-warning">{{ errorMsg }}</li>
+            </ul>              
+        </template>
     </div>   
 </template>
-
 <script>
-
 
 export default {
     data() {
@@ -86,42 +100,80 @@ export default {
         search(query) {
             let vm = this;
             if (!query) return;
+                        console.log('query', query);
 
             if (typeof query === 'object') {                      
-                query = query.title;                         
-                this.$store.commit('saveQueryTitle', query);
+                
+                        console.log('query.title', query.title);                       
+                this.$store.commit('saveQueryTitle', query.title);
+                        console.log('query.place_name', query.place_name); 
+                query = query.place_name;
+                        console.log('query.place_name', query);                       
             }             
       
             this.$store.dispatch('search', [query, ])
             .then(() => {
-                const response = vm.$store.getters.getData;               
-                vm.switchResponse(response);
+                
+                this.errorMsg = vm.$store.getters.getmsg;
+                const response = vm.$store.getters.getData;      
+                this.locations = response.locations;
+                ((this.locations)&&(response.listings.length)) ? vm.switchResponse(response) : this.errorMsg = "There were no properties found for the given location.";
             });            
         },
 
-        switchResponse(response) {
-            console.log(response);      
-                let appCode = response.application_response_code;
-                console.log(appCode);
-                console.log(response.listings);
-                this.locations = response.locations;
-                switch (appCode) {
-                case '100': 
-                case '101':
-                case '110':
-                 
+        switchResponse(response) {  
+                      
+            let appCode = response.application_response_code; 
+
+            
+            switch (appCode) {
+                case '100': //one unambiguous location
+                case '101': //best guess of ambiguous location
+                case '110': //location very large
+                this.errorMsg='';               
+                
+               
                     this.$store.commit('saveListings', response.listings);
                     this.saveLocationToLS(this.locations[0], response.total_results);
                     this.$store.commit('saveTotal', response.total_results);
                     this.$router.push('/results');
                     break;
+
+                
+                   // the results will be shown in the suggested locations list
+                case '200': // ambiguous location
+                case '202': //misspelled location
+                    // 
+
+                    if (response.application_response_text=="unknown location"){
+                        this.errorMsg = "The location given was not recognised.";
+                        break;       
+                    }
                 default:
                     this.errorMsg = 'There was a problem with your search.';
                     console.error('status_code: ', response.status_code, response.application_response_text);
                 }
-                    
-
+        
         },
+		
+		getLocation () {
+			let vm = this;
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(showPosition);
+			} else {
+				vm.errorMsg = "The use of location is currently disabled";
+			}
+
+			function showPosition(position) {
+                let latitude = position.coords.latitude;
+                let longitude = position.coords.longitude;
+				vm.$store.dispatch('searchLocation', (latitude + "," + longitude))
+				.then(() => {
+                    const response = vm.$store.getters.getData;            
+                    vm.switchResponse(response);
+                });				
+			}		
+		},
 
         saveLocationToLS (obj, quantity) {
           
@@ -143,9 +195,11 @@ export default {
 
         gotoResults(){
             this.$router.push('/results');
+        },
+        gotoFavourites() {
+            this.$router.push('/favourites');
         }
-    }
-    
+    }    
 };
 
 </script>

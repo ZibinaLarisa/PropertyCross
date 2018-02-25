@@ -1,12 +1,12 @@
 <template>
-    <div class="Results"> 
+    <div class="container"> 
         <div class="main">
             <ul class="list-group">
                 <li class="list-group-item list-group-item-info">
                 {{ listProps.length }}  of {{ totalAmount }} matches
                 </li>
                 <li class="list-group-item" 
-                    v-for="(item, index) in listProps"                
+                    v-for="(item, index) in listProps"   
                     @click="gotoDetails(item)"
                     >
                     <img class="img-thumbnail"
@@ -25,13 +25,11 @@
             <p>
                Results for {{queryTitle}}, showing {{ listProps.length }} of {{ totalAmount }} properties 
                 </p>
-                
                 <button type="button" class="btn btn-info"
                      v-if="listProps.length !== totalAmount"
                      @click="loadMoreProperties()">         
                     {{ loadButton }}
                 </button>
-                
             </div>
         </div>
     </div> 
@@ -40,7 +38,7 @@
 <script>
 export default {
     data() {
-        return {    
+        return {             
             totalAmount: 0,
             listProps: 0,
             queryTitle: '',
@@ -51,8 +49,8 @@ export default {
 
     created: function () {      
         this.totalAmount = this.$store.state.totalAmount;
-        this.listProps = this.$store.state.listProps;               
-        this.queryTitle = this.$store.state.queryTitle;        
+        this.listProps = this.$store.state.listProps;
+        this.queryTitle = this.$store.state.queryTitle;
     },
 
     methods: {
@@ -72,7 +70,8 @@ export default {
         },
 
         gotoDetails (item) {
-            this.$store.commit('saveItem', item);          
+            this.$store.commit('saveItem', item);
+            console.log(item);          
             this.$router.push('/details');
         }
 
@@ -95,20 +94,20 @@ export default {
         border: 1px solid rgba(0,0,0,.125);
         vertical-align: center;
         padding: 10px 20px;
-    }
-
-   .inline {
-        display: inline;
-        margin-right: 5px;
-    }
-
+    } 
     .item-box {
         margin-left: 110px;
         margin-top: -60px;
     }
 
-    .center {
-        text-align: center;
+    .list-group-item {
+        padding-bottom: 20px;
+
+    }
+
+    li:hover {
+        color: #31708f;
+        background-color: #d9edf7;
     }
 
  </style>

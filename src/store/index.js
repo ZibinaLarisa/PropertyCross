@@ -12,26 +12,30 @@ const store = new Vuex.Store({
         totalAmount: 0,
         listProps: [],
         item:{},       
-        queryTitle:''    
+        queryTitle:'',
+        msg:'',
+        favourites: []    
     },
 
     getters:{
-        getData: state => state.data       
+        getData: state => state.data,
+        getmsg: state => state.msg,
+        getfav: state => state.favourites
     },
 
     mutations:{
 
-        setData (state, payload) { // response.data.response
-            state.data = payload;      
+        setData (state, payload) { 
+            state.data = payload;  // response.data.response    
         },
         setLocalStorage (state, obj) {
-            state.vm = obj;      
+            state.vm = obj;    
         },
-       	saveListings (state, arr) {
-            state.listProps = arr;
+        saveListings (state, arr) {
+            state.listProps = arr; //  response.listings
         },
         saveTotal (state, number) { 
-            state.totalAmount = number;
+            state.totalAmount = number; // response.total_results
         },
         saveQueryTitle (state, title) {
             state.queryTitle = title;            
@@ -40,8 +44,22 @@ const store = new Vuex.Store({
             state.data = payload_;
         },
         saveItem (state, obj) {
-            state.item = obj;
+            state.item = obj; // response.listings[i] at the Result page
+        },
+        setmsg (state, string) {
+            state.msg = string;
+        },
+        addFavourites (state, obj) {
+            state.favourites.push(obj);           
+        },
+        delFavourites (state, obj) {
+           const index = state.favourites.findIndex(item => item.title === obj.title);
+           console.log(`index ${index}`);
+           if (index !== -1) {
+              state.favourites.splice(index, 1);
+            }
         }
+       
     },
 
     actions: {
@@ -62,18 +80,25 @@ const store = new Vuex.Store({
                     }
                 })
                 .then(response => {
-                    console.log(`page ${page}`);
+                            console.log(`page ${page}`);
+                            console.log(`indexquery ${query}`);
                     const results = response.data.response;                    
-                    console.log('results', results);
+                            console.log('results', results);
                     store.commit('setData', results);
+                    
                     return results;
                 })                                
                 .catch((error) => {
                     console.log(error);
+                    const ermsg = 'An error occurred while searching. Please check your network connection and try again.'
+                    store.commit('setmsg', ermsg);
+                    //store.state.msg = 'An error occurred while searching. Please check your network connection and try again.';
+                    
                 });
         },
 		
-		searchLocation({ commit }, [location, page=1]) {      
+		searchLocation({ commit }, location) {    
+        console.log(location);  
             const url = 'https://api.nestoria.co.uk/api';
             return axios.get(url,
                 { 
@@ -84,17 +109,21 @@ const store = new Vuex.Store({
                         action: 'search_listings',
                         encoding: 'json',
                         listing_type: 'buy',
-                        page: page,
+                        page: 1,
                         centre_point: location
                     }
                 })
-                .then(response => {                    
+                .then(response => {  
+                            console.log(response);                  
                     const results = response.data.response;                   
                     store.commit('setData', results);
+					       console.log('results', results);					
                     return results;
                 })                                
                 .catch((error) => {
-                    console.log(error);        
+                    console.log(error); 
+                    store.commit('setmsg', ermsg);
+                    //store.state.msg = 'Unable to detect current location. Please ensure location is turned on in your phone settings and try again.';
                 });
         }
     }
