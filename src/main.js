@@ -9,7 +9,7 @@ import VueLocalStorage from 'vue-localstorage';
 import Search from './components/Search.vue';
 import Results from './components/Results.vue';
 import Details from './components/Details.vue';
-import Favourites from './components/Favourites.vue';
+import Favorites from './components/Favourites.vue';
 
 Vue.use(VueRouter);
 Vue.use(VueLocalStorage);
@@ -18,10 +18,11 @@ Vue.use(VueLocalStorage);
 Vue.component('Search', Search);
 Vue.component('Results', Results);
 Vue.component('Details', Details);
-Vue.component('Favourites', Favourites);
+Vue.component('Favorites', Favorites);
 
 
 export const router = new VueRouter({
+    mode: 'history',
     routes 
 });
 

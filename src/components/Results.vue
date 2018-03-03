@@ -38,19 +38,24 @@
 <script>
 export default {
     data() {
-        return {             
-            totalAmount: 0,
-            listProps: 0,
+        return {     
+            
+            listProps: [],
             queryTitle: '',
             loadButton:'Load more...',
             page: 1      
         }
     },
 
-    created: function () {      
-        this.totalAmount = this.$store.state.totalAmount;
-        this.listProps = this.$store.state.listProps;
-        this.queryTitle = this.$store.state.queryTitle;
+    created: function () {
+        this.listProps = this.$store.getters.getListings;
+        this.queryTitle = this.$store.getters.getTitle;
+    },
+
+    computed: {
+        totalAmount () {
+            return this.$store.getters.getTotalAmount;
+        }
     },
 
     methods: {
@@ -70,8 +75,7 @@ export default {
         },
 
         gotoDetails (item) {
-            this.$store.commit('saveItem', item);
-            console.log(item);          
+            this.$store.commit('saveItem', item);                    
             this.$router.push('/details');
         }
 

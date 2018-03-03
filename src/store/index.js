@@ -8,25 +8,31 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     state:{
         vm: {},
-        data: {},
-        totalAmount: 0,
+        data: {},        
         listProps: [],
-        item:{},       
-        queryTitle:'',
+        item:{},
         msg:'',
-        favourites: []    
+        textButton: ''         
     },
 
     getters:{
         getData: state => state.data,
         getmsg: state => state.msg,
-        getfav: state => state.favourites
+        getItem: state => state.item,        
+        getTotalAmount: state => state.data.total_results,
+        getTitle: state => state.data.locations[0].title,
+        getListings: state => state.listProps,
+        getTextButton: state =>state.textButton,
+        getFavorite: function(state) {
+            let list_filtered =  state.listProps.filter(item => item.favorite);
+            return list_filtered;
+        }
     },
 
     mutations:{
 
         setData (state, payload) { 
-            state.data = payload;  // response.data.response    
+            state.data = payload;  // response.data.response
         },
         setLocalStorage (state, obj) {
             state.vm = obj;    
@@ -34,9 +40,7 @@ const store = new Vuex.Store({
         saveListings (state, arr) {
             state.listProps = arr; //  response.listings
         },
-        saveTotal (state, number) { 
-            state.totalAmount = number; // response.total_results
-        },
+        
         saveQueryTitle (state, title) {
             state.queryTitle = title;            
         },
@@ -45,19 +49,17 @@ const store = new Vuex.Store({
         },
         saveItem (state, obj) {
             state.item = obj; // response.listings[i] at the Result page
+            Vue.set(state.item, 'favorite', false);
+            state.textButton = 'Add to favorite';           
         },
         setmsg (state, string) {
             state.msg = string;
         },
-        addFavourites (state, obj) {
-            state.favourites.push(obj);           
-        },
-        delFavourites (state, obj) {
-           const index = state.favourites.findIndex(item => item.title === obj.title);
-           console.log(`index ${index}`);
-           if (index !== -1) {
-              state.favourites.splice(index, 1);
-            }
+       
+        toggle_fav (state) {
+            state.item.favorite = !state.item.favorite;
+            state.textButton = !state.item.favorite ? 'Add to favorite' : 'Remove from favorite'
+           
         }
        
     },
@@ -79,26 +81,19 @@ const store = new Vuex.Store({
                         place_name: query
                     }
                 })
-                .then(response => {
-                            console.log(`page ${page}`);
-                            console.log(`indexquery ${query}`);
-                    const results = response.data.response;                    
-                            console.log('results', results);
+                .then(response => {                          
+                    const results = response.data.response;
                     store.commit('setData', results);
-                    
                     return results;
                 })                                
                 .catch((error) => {
                     console.log(error);
                     const ermsg = 'An error occurred while searching. Please check your network connection and try again.'
-                    store.commit('setmsg', ermsg);
-                    //store.state.msg = 'An error occurred while searching. Please check your network connection and try again.';
-                    
+                    store.commit('setmsg', ermsg);                    
                 });
         },
 		
-		searchLocation({ commit }, location) {    
-        console.log(location);  
+		searchLocation({ commit }, location) {  
             const url = 'https://api.nestoria.co.uk/api';
             return axios.get(url,
                 { 
@@ -113,17 +108,15 @@ const store = new Vuex.Store({
                         centre_point: location
                     }
                 })
-                .then(response => {  
-                            console.log(response);                  
+                .then(response => {
                     const results = response.data.response;                   
-                    store.commit('setData', results);
-					       console.log('results', results);					
+                    store.commit('setData', results);								
                     return results;
                 })                                
                 .catch((error) => {
                     console.log(error); 
-                    store.commit('setmsg', ermsg);
-                    //store.state.msg = 'Unable to detect current location. Please ensure location is turned on in your phone settings and try again.';
+                    const ermsg = 'Unable to detect current location. Please ensure location is turned on in your phone settings and try again.'
+                    store.commit('setmsg', ermsg);                   
                 });
         }
     }

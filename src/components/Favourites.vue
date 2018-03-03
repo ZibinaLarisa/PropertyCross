@@ -3,12 +3,22 @@
 		<div class="main">
 			<ul class="list-group-items">
 				<li class="list-group-item list-group-item-info">
-					<h3>Favourites</h3>
+					<h4>Favorites</h4>
 				</li>
-				<li class="list-group-item"
-					v-for="(item, index) in favourites"
+
+				<!-- Show if no favorites -->
+				<li v-if="favorites.length===0"
+					class="list-group-item list-group-item-warning"> 
+				    <h5>
+				    	You have not added any properties to your favourites.
+				    </h5>
+     			</li>
+
+     			<!-- Show thie list of favorites -->
+				<li v-else class="list-group-item"
+					v-for="(item, index) in favorites"
 					@click="gotoDetails(item)">
-				<img class="img-thumbnail"
+					<img class="img-thumbnail"
                         :src="item.thumb_url">
                     <div class='item-box'> 
                         <div>
@@ -27,13 +37,14 @@
 export default {
 	data() {
 		return {
-			favourites: []
+			favorites: []
 		}
 	},
 
-	created: function () {
-		this.favourites = this.$store.getters.getfav;
+	created: function () {		
+		this.favorites = this.$store.getters.getFavorite;	
 	},
+
 
 	methods: {
 		gotoDetails (item) {
@@ -46,6 +57,9 @@ export default {
 </script>
 
 <style scoped>
+	.container {          
+          padding-top:10px;          
+      }
 	
 	.item-box {
 		margin-left: 110px;
@@ -54,7 +68,6 @@ export default {
 
 	.list-group-item {
 		padding-bottom: 20px;
-
 	}
 
     li:hover {

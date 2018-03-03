@@ -1,5 +1,5 @@
 <template>
-	<div class="details">
+	<div class="container">
     	<div class="card">
             <nav class="navbar navbar-default">
             <div class="container-fluid">
@@ -7,7 +7,7 @@
                   <h3>Property Details</h3>
                 </div>
                 <button class="btn btn-info navbar-btn navbar-right"
-                @click="gotoFavourites()">Favourites</button>
+                @click="gotoFavorites()">Favorites</button>
             </div>
         </nav>
             <div class="card-block">
@@ -16,9 +16,12 @@
                 <img :src="item.img_url" alt="" >
                 <h5 class="card-title">{{item.bedroom_number}} bedrooms, {{item.bathroom_number}} bathrooms</h5>
                 <p class="card-text">{{item.summary}}</p>
-                <a href="#" class="btn btn-primary"
-                @click="addtoFavourite()"
-                >{{favButton}}</a>
+
+                <button class="btn btn-primary"
+                @click="toggleFavorite()"
+                 :class="{starred: item.favorite}"
+                >{{favButton}}</button>
+                
             </div>
         </div>
 	</div>
@@ -27,72 +30,63 @@
 export default {
     data() {
         return {    
-            item: {},
-            favButton: 'Add to favourite',
-            favourite: false,           
+            item: {} 
         }
     },
-
+    
     created: function () {      
-        this.item = this.$store.state.item;        
-        this.getFavourites();    
+        this.item = this.$store.getters.getItem;
+    },
+
+    computed: {
+        favButton () {
+            return this.$store.getters.getTextButton;
+        }    
     },
 
     methods: {
-        addtoFavourite() {
-            this.favourite = !this.favourite;
-            this.favButton = this.favourite ? 'Remove from Favourite' : 'Add to favourite';
-            if (this.favourite) {
-                this.$store.commit('addFavourites', this.item)
-            }
-            else {
-                this.$store.commit('delFavourites', this.item)
-            }
+        toggleFavorite() {
+            this.$store.commit('toggle_fav');
         },
 
-        getFavourites() {
-            let arr = this.$store.getters.getfav;
-            const title = arr.find(item => item.title === this.item.title );
-            if (title) {
-                this.favButton = 'Remove from Favourite';
-            }
-        },
-
-
-        gotoFavourites(){
-            this.$router.push('./favourites');
-            ;
+        gotoFavorites(){
+            this.$router.push('./favorites');
         }
     },
 
     filters: {
         trancated: function (value) {
             if (!value) return '';
-            return  value.split(',').slice(0,2).join(',');            
-        }
-        
+            return  value.split(',').slice(0,2).join(',');
+        }        
     }
 }
+
 </script>
 
 <style scoped>
     body {
         background-color: grey;
     }
-    .details {
+    /.details {
         display: block;
         width: 800px;
         margin-left: auto;
         margin-right: auto;
         padding-top:10px;
           
-    }
+    } 
     .navbar-right {
         margin-right: 20px;
     }
 
     .card-block {
         padding: 10px;        
+    }
+    .starred {
+    color: red;
+    background-color:orange;
+    border-color:red;
     }
 
    

@@ -1,4 +1,4 @@
-<template>
+saveTotal<template>
     <div class="container">
         <nav class="navbar navbar-default">
             <div class="container-fluid">
@@ -100,29 +100,26 @@ export default {
         search(query) {
             let vm = this;
             if (!query) return;
-                        console.log('query', query);
-
-            if (typeof query === 'object') {                      
-                
-                        console.log('query.title', query.title);                       
+         
+            if (typeof query === 'object') {
                 this.$store.commit('saveQueryTitle', query.title);
-                        console.log('query.place_name', query.place_name); 
-                query = query.place_name;
-                        console.log('query.place_name', query);                       
+                query = query.place_name;                    
             }             
       
             this.$store.dispatch('search', [query, ])
             .then(() => {
                 
                 this.errorMsg = vm.$store.getters.getmsg;
-                const response = vm.$store.getters.getData;      
-                this.locations = response.locations;
-                ((this.locations)&&(response.listings.length)) ? vm.switchResponse(response) : this.errorMsg = "There were no properties found for the given location.";
+                const response = vm.$store.getters.getData;  
+
+                vm.switchResponse(response);               
+                
             });            
         },
 
-        switchResponse(response) {  
-                      
+        switchResponse(response) {
+
+            this.locations = response.locations;                
             let appCode = response.application_response_code; 
 
             
@@ -130,12 +127,16 @@ export default {
                 case '100': //one unambiguous location
                 case '101': //best guess of ambiguous location
                 case '110': //location very large
-                this.errorMsg='';               
-                
+                    
+                    
+                    if(!response.listings.length){
+                        this.errorMsg = 'There were no properties found for the given location.'
+                        break;
+                    }        
                
                     this.$store.commit('saveListings', response.listings);
                     this.saveLocationToLS(this.locations[0], response.total_results);
-                    this.$store.commit('saveTotal', response.total_results);
+                    
                     this.$router.push('/results');
                     break;
 
@@ -145,10 +146,15 @@ export default {
                 case '202': //misspelled location
                     // 
 
-                    if (response.application_response_text=="unknown location"){
-                        this.errorMsg = "The location given was not recognised.";
-                        break;       
+                    
+                    if(!this.locations.length){
+                        this.errorMsg = 'There were no properties found for the given location.'
+                        break;
                     }
+                    else if (response.application_response_text=='unknown location'){
+                        this.errorMsg = 'The location given was not recognised.';
+                        break;       
+                    }   
                 default:
                     this.errorMsg = 'There was a problem with your search.';
                     console.error('status_code: ', response.status_code, response.application_response_text);
@@ -161,13 +167,13 @@ export default {
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(showPosition);
 			} else {
-				vm.errorMsg = "The use of location is currently disabled";
+				vm.errorMsg = 'The use of location is currently disabled';
 			}
 
 			function showPosition(position) {
                 let latitude = position.coords.latitude;
                 let longitude = position.coords.longitude;
-				vm.$store.dispatch('searchLocation', (latitude + "," + longitude))
+				vm.$store.dispatch('searchLocation', (latitude + ',' + longitude))
 				.then(() => {
                     const response = vm.$store.getters.getData;            
                     vm.switchResponse(response);
@@ -207,11 +213,11 @@ export default {
 <style scoped>
       .container {
           display: block;
-          width: 600px;
+          width: 800px;
           margin-left: auto;
           margin-right: auto;
           padding-top:10px;
-          border: 1px solid black;
+          border: 1px solid blue;
       }
       .navbar-right {
           margin-right: 7px;
